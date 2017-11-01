@@ -1,10 +1,11 @@
 /**
  * @file   sr06.cpp
  * @author Yann Sionneau <yann.sionneau@gmail.com>, Hugo Elias <hugo@shadowrobot.com>,
- *         Ugo Cupcic <ugo@shadowrobot.com>, Toni Oliver <toni@shadowrobot.com>, contact <software@shadowrobot.com>
- * @date   Mon May 23 13:33:30 2011
+ *         Ugo Cupcic <ugo@shadowrobot.com>, Toni Oliver <toni@shadowrobot.com>,
+ *         Dan Greenwald <dg@shadowrobot.com>, contact <software@shadowrobot.com>
+ * @date   Wed Oct 01 17:30 2017
  *
- * Copyright 2011 Shadow Robot Company Ltd.
+ * Copyright 2017 Shadow Robot Company Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -145,6 +146,8 @@ int SR06::initialize(hardware_interface::HardwareInterface *hw, bool allow_unpro
     return retval;
   }
 
+  hw_ = static_cast<ros_ethercat_model::RobotState *> (hw);
+  imu_state_ = hw_->getImuState("rh_imu");
   sr_hand_lib = boost::shared_ptr<shadow_robot::SrMotorHandLib<ETHERCAT_DATA_STRUCTURE_0200_PALM_EDC_STATUS,
           ETHERCAT_DATA_STRUCTURE_0200_PALM_EDC_COMMAND> >(
           new shadow_robot::SrMotorHandLib<ETHERCAT_DATA_STRUCTURE_0200_PALM_EDC_STATUS,
@@ -300,6 +303,24 @@ bool SR06::unpackState(unsigned char *this_buffer, unsigned char *prev_buffer)
   static unsigned int num_rxed_packets = 0;
 
   ++num_rxed_packets;
+
+  imu_state_->data_.orientation[0] = 0.0; imu_state_->data_.orientation[1] = 0.0;
+  imu_state_->data_.orientation[2] = 0.0; imu_state_->data_.orientation[3] = 1.0;
+
+  imu_state_->data_.linear_acceleration[0] = status_data->sensors[ACCX];
+  imu_state_->data_.linear_acceleration[1] = status_data->sensors[ACCY];
+  imu_state_->data_.linear_acceleration[2] = status_data->sensors[ACCZ];
+
+  imu_state_->data_.angular_velocity[0] = status_data->sensors[GYRX];
+  imu_state_->data_.angular_velocity[1] = status_data->sensors[GYRY];
+  imu_state_->data_.angular_velocity[2] = status_data->sensors[GYRZ];
+
+  for (size_t x = 0; x < 9; ++x)
+  {
+    imu_state_->data_.linear_acceleration_covariance[x] = 0.0;
+    imu_state_->data_.angular_velocity_covariance[x] = 0.0;
+    imu_state_->data_.orientation_covariance[x] = 0.0;
+  }
 
 
   // publishes the debug information (a slightly formatted version of the incoming ethercat packet):

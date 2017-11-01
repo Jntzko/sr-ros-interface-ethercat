@@ -41,8 +41,9 @@
 #include <boost/assign.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/find_iterator.hpp>
-
 #include <sr_robot_lib/sr_motor_hand_lib.hpp>
+
+#include <ros_ethercat_model/robot_state.hpp>
 
 #include <sr_robot_msgs/EthercatDebug.h>
 
@@ -95,6 +96,12 @@ private:
   // counter for the number of empty buffer we're reading.
   unsigned int zero_buffer_read;
 
+  // Robot state interface
+  ros_ethercat_model::RobotState * hw_;
+
+  // IMU state interface
+  ros_ethercat_model::ImuState * imu_state_;
+
   boost::shared_ptr<shadow_robot::SrMotorHandLib<ETHERCAT_DATA_STRUCTURE_0200_PALM_EDC_STATUS,
           ETHERCAT_DATA_STRUCTURE_0200_PALM_EDC_COMMAND> > sr_hand_lib;
 
@@ -117,4 +124,3 @@ End:
 
 
 #endif  // SR_EDC_ETHERCAT_DRIVERS_SR06_H
-
